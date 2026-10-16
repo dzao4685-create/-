@@ -79,7 +79,7 @@ $('restart').onclick=fresh;$('undo').onclick=()=>{if(ended)return;stopAI();clear
 fresh();try{let saved=JSON.parse(localStorage.getItem('cozy-gomoku-session')||'null');if(saved&&Array.isArray(saved.history)&&['ai','local'].includes(saved.mode)&&[1,2].includes(saved.human)){ $('mode').value=saved.mode;$('side').value=String(saved.human);$('level').value=['easy','normal','hard','expert','master'].includes(saved.level)?saved.level:'normal';fresh();clearTimeout(timer);thinking=false;for(let h of saved.history){if(!Number.isInteger(h.x)||!Number.isInteger(h.y)||!inside(h.x,h.y)||board[h.y][h.x]||h.p!==turn||ended)break;put(h.x,h.y)}queueAI()}}catch{}let saveOriginal=save;save=function(){saveOriginal();try{localStorage.setItem('cozy-gomoku-session',JSON.stringify({history,mode:gameMode,human,level}))}catch{}};resize();
 
 // Online state is authoritative on the room server; never infer a remote move.
-const ONLINE_ORIGIN='https://cozy-bear-gomoku.dzao4685.chatgpt.site';
+const ONLINE_ORIGIN=location.protocol==='https:'&&!['localhost','127.0.0.1'].includes(location.hostname)?location.origin:'https://test.earlier.top';
 const API_ORIGIN=location.hostname==='127.0.0.1'||location.hostname==='localhost'||location.protocol==='file:'?ONLINE_ORIGIN:location.origin;
 let roomSession=null,roomState=null,pollTimer=null,busyOnline=false,networkOkay=false,pollGeneration=0,lastRoomRevision=-1,lastRound=-1,offlineSince=0;
 const baseUpdate=update,baseMove=humanMove,baseSave=save,baseFresh=fresh;
@@ -136,3 +136,4 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&roomSessi
 const invitation=new URLSearchParams(location.search).get('room');if(invitation){$('mode').value='online';baseFresh();$('roomInput').value=invitation.toUpperCase();roomError('点击「加入」，和朋友坐进同一个房间。')}else if(savedRoom()){ $('mode').value='online';baseFresh();const s=savedRoom();joinOnline(s.code)}update();
 
 </script></body></html>
+
