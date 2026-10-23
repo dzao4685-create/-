@@ -24,7 +24,7 @@ html{min-height:100%;-webkit-text-size-adjust:100%;scroll-padding-top:12px}body{
 <main class="shell"><header class="top"><div class="logo"><svg aria-hidden="true"><use href="#bear"/></svg><div><div class="eyebrow">A LITTLE COZY GAME</div><h1>熊熊角落 · 五子棋</h1><div class="sub">在小角落里，慢慢下盘棋。</div></div></div><button class="pill" id="onlineShortcut">邀朋友</button></header>
 <div class="layout"><section class="board-card" aria-label="五子棋棋盘"><div class="board-head"><span class="board-title">THE COZY BOARD · 15 × 15</span><span class="move-num" id="moves">第 0 手</span></div><div class="canvas-wrap"><canvas id="board" width="650" height="650" tabindex="0" role="grid" aria-label="15乘15五子棋棋盘，点击交叉点落子，也可用方向键和回车落子"></canvas></div><div class="board-foot"><span>横 · 竖 · 斜，五子相连就获胜</span><button class="music" id="sound" aria-pressed="false">♪ 落子音效：关</button></div></section>
 <aside class="side"><section class="card turn-card"><div class="bear-stage" id="bearStage"><span class="sparkle">✧</span><svg aria-hidden="true"><use href="#bear"/></svg><span class="sparkle second">✦</span></div><div class="status" id="status" aria-live="polite">轮到你啦</div><div class="hint" id="hint">点一个交叉点，放下第一颗棋子。</div><div class="turn-chip"><span class="stone-dot" id="turnDot"></span><span id="turnText">你执黑 · 熊熊执白</span></div></section>
-<section class="card fields"><div class="section-label">MAKE YOURSELF AT HOME</div><label>对局模式<select id="mode" aria-label="对局模式"><option value="ai">和熊熊对弈</option><option value="local">朋友面对面</option><option value="online">朋友线上联机</option></select></label><label id="sideField">你的棋子<select id="side" aria-label="你的棋子"><option value="1">黑子 · 先手</option><option value="2">白子 · 后手</option></select></label><label id="levelField">熊熊棋力<select id="level" aria-label="熊熊棋力"><option value="easy">入门</option><option value="normal" selected>标准</option><option value="hard">困难</option><option value="expert">高手</option><option value="master">大师</option></select></label><div class="actions"><button class="btn primary" id="restart">再来一局</button><button class="btn" id="undo" disabled>悔一步</button></div></section>
+<section class="card fields"><div class="section-label">MAKE YOURSELF AT HOME</div><label>对局模式<select id="mode" aria-label="对局模式"><option value="ai">和熊熊对弈</option><option value="local">朋友面对面</option><option value="online">朋友线上联机</option></select></label><label id="sideField">你的棋子<select id="side" aria-label="你的棋子"><option value="1">黑子 · 先手</option><option value="2">白子 · 后手</option></select></label><label id="levelField">熊熊棋力<select id="level" aria-label="熊熊棋力"><option value="easy">入门</option><option value="normal">标准</option><option value="hard" selected>困难</option><option value="expert">高手</option><option value="master">大师 · 深度思考</option></select></label><div class="actions"><button class="btn primary" id="restart">再来一局</button><button class="btn" id="undo" disabled>悔一步</button></div></section>
 <!-- ONLINE UI --><section class="card online-card" id="onlineCard" hidden><div class="section-label">A FRIEND IN ANOTHER CORNER</div><h2>邀朋友来下棋</h2><div id="roomLobby" class="room-lobby"><p class="online-copy">各自在自己的电脑或手机上，<br>也可以坐进同一个小角落。</p><button class="btn primary" id="createRoom" style="width:100%">创建房间 · 执黑先手</button><div class="room-input"><input id="roomInput" aria-label="六位房间码" maxlength="6" placeholder="输入房间码" autocomplete="off" spellcheck="false"><button class="btn" id="joinRoom">加入</button></div><button class="btn online-entry" id="resumeRoom" hidden>回到上次房间</button></div><div id="roomLive" class="room-live" hidden><div class="connection" id="connection" role="status">正在连接…</div><div class="room-code" id="roomCode"></div><div class="room-buttons"><button class="btn" id="copyInvite">复制邀请链接</button><button class="btn" id="copyCode">复制房间码</button></div><div class="request" id="rematchRequest" hidden><p id="requestText"></p><div class="room-buttons"><button class="btn primary" id="acceptRematch">同意</button><button class="btn" id="declineRematch">暂不</button></div></div><button class="btn online-entry" id="leaveRoom">离开房间</button><a class="back-board" href="#board">回到棋盘 ↑</a><div class="online-note">房间保留 24 小时。刷新或断线后，可在同一浏览器回到棋局。新一局需双方同意。</div></div><p id="networkError" class="network-error" role="alert"></p></section><section class="card friend-card"><div class="section-label">YOUR LITTLE CHEER SQUAD</div><div class="friends"><svg aria-hidden="true"><use href="#cat"/></svg><svg aria-hidden="true"><use href="#penguin"/></svg><svg aria-hidden="true"><use href="#tokage"/></svg></div><p class="friend-copy">小伙伴都在这里陪你。<br>输赢都没关系，下一手慢慢想。</p></section></aside></div>
 <footer class="footer"><span>奶油色的小屋，和一颗颗小棋子。</span><span>自由五子棋 · 黑先白后 · 五连或以上获胜 · 无禁手</span></footer></main><div class="toast" id="toast" role="status"></div>
 <script>
@@ -45,26 +45,90 @@ function score(x,y,p){let total=0;for(let[dx,dy]of dirs){let n=1,open=0;for(let 
  return total+Math.max(0,14-Math.abs(x-7)-Math.abs(y-7))}
 function pickAI(){let p=turn,q=3-p,c=candidates();let wins=c.filter(([x,y])=>{board[y][x]=p;let w=winAt(x,y,p);board[y][x]=0;return w});if(wins.length)return wins[0];let blocks=c.filter(([x,y])=>{board[y][x]=q;let w=winAt(x,y,q);board[y][x]=0;return w});if(blocks.length)return blocks[0];let ranked=c.map(([x,y])=>({x,y,a:score(x,y,p),d:score(x,y,q)})).sort((a,b)=>(b.a+b.d*1.08)-(a.a+a.d*1.08));if(level==='easy'){let m=ranked[Math.floor(Math.random()*Math.min(3,ranked.length))];return[m.x,m.y]}let best=ranked[0],bestValue=-Infinity;for(let m of ranked.slice(0,8)){board[m.y][m.x]=p;let reply=0;for(let[x,y]of candidates())reply=Math.max(reply,score(x,y,q));board[m.y][m.x]=0;let value=m.a+m.d*1.12-reply*.55;if(value>bestValue){bestValue=value;best=m}}return[best.x,best.y]}
 
+// AI engine v2 · 2026-10-23 · threat-aware iterative search
 function bearSearchWorker(){
- const dirs=[[1,0],[0,1],[1,1],[1,-1]],N=15,WIN=1000000000;let b,deadline;
+ const N=15,SIZE=225,WIN=100000000,dirs=[[1,0],[0,1],[1,1],[1,-1]];
+ let b,cache,hash,deadline,tt,nodes,rootPlayer;
  const inside=(x,y)=>x>=0&&x<N&&y>=0&&y<N;
- function won(x,y,p){for(const[dx,dy]of dirs){let n=1;for(const sign of[-1,1]){let xx=x+dx*sign,yy=y+dy*sign;while(inside(xx,yy)&&b[yy][xx]===p){n++;xx+=dx*sign;yy+=dy*sign}}if(n>=5)return true}return false}
- function positions(){const set=new Set();let occupied=false;for(let y=0;y<N;y++)for(let x=0;x<N;x++)if(b[y][x]){occupied=true;for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const xx=x+dx,yy=y+dy;if(inside(xx,yy)&&!b[yy][xx])set.add(yy*N+xx)}}return occupied?Array.from(set,v=>[v%N,Math.floor(v/N)]):[[7,7]]}
- function value(x,y,p){let total=0,threes=0,fours=0;for(const[dx,dy]of dirs){let n=1,open=0;for(const sign of[-1,1]){let k=1;while(inside(x+dx*k*sign,y+dy*k*sign)&&b[y+dy*k*sign][x+dx*k*sign]===p){n++;k++}if(inside(x+dx*k*sign,y+dy*k*sign)&&!b[y+dy*k*sign][x+dx*k*sign])open++}if(n>=5)return WIN;if(n===4&&open===2){total+=500000;fours++}else if(n===4&&open){total+=40000;fours++}else if(n===3&&open===2){total+=7000;threes++}else if(n===3&&open)total+=220;else if(n===2&&open===2)total+=320;else if(n===2&&open)total+=35;
- let brokenFour=false,brokenThree=false;for(let start=-4;start<=0;start++){let stones=0,blocked=false;for(let k=0;k<5;k++){let xx=x+(start+k)*dx,yy=y+(start+k)*dy;if(!inside(xx,yy)||b[yy][xx]===3-p){blocked=true;break}if((xx===x&&yy===y)||b[yy][xx]===p)stones++}if(!blocked){if(stones===4)brokenFour=true;else if(stones===3)brokenThree=true;total+=[0,1,8,90,1800,0][stones]}}if(brokenFour&&n<4){total+=22000;fours++}else if(brokenThree)total+=180;}
- if(fours>=2)total+=800000;else if(fours&&threes)total+=200000;else if(threes>=2)total+=65000;return total+Math.max(0,14-Math.abs(x-7)-Math.abs(y-7));}
- function rank(p){if(performance.now()>deadline)throw 'timeout';let c=positions(),wins=[],blocks=[],ranked=[];for(const[x,y]of c){const a=value(x,y,p),d=value(x,y,3-p),m={x,y,a,d,s:a+d*1.08};if(a>=WIN)wins.push(m);if(d>=WIN)blocks.push(m);ranked.push(m)}if(wins.length)return{moves:wins,forced:true};if(blocks.length)return{moves:blocks,forced:true};ranked.sort((a,b)=>b.s-a.s);return{moves:ranked,forced:false}}
- function evaluate(p,ranked){let a=[],d=[];for(const m of ranked){a.push(m.a);d.push(m.d)}a.sort((x,y)=>y-x);d.sort((x,y)=>y-x);return (a[0]||0)*1.08+(a[1]||0)*.35+(a[2]||0)*.12-(d[0]||0)-(d[1]||0)*.35-(d[2]||0)*.12}
- function search(p,depth,alpha,beta,width){const r=rank(p);if(!r.moves.length)return 0;if(r.moves[0].a>=WIN)return WIN+depth;if(depth===0)return evaluate(p,r.moves);let best=-Infinity;for(const m of r.moves.slice(0,width)){b[m.y][m.x]=p;let v;try{v=won(m.x,m.y,p)?WIN+depth:-search(3-p,depth-1,-beta,-alpha,Math.max(5,width-2))}finally{b[m.y][m.x]=0}if(v>best)best=v;if(v>alpha)alpha=v;if(alpha>=beta)break}return best}
- self.onmessage=({data})=>{b=data.board.map(r=>r.slice());deadline=performance.now()+data.budget;let first;try{first=rank(data.p)}catch{self.postMessage({id:data.id,move:[7,7]});return}let best=first.moves[0];if(!best){self.postMessage({id:data.id,move:null});return}if(first.forced){self.postMessage({id:data.id,move:[best.x,best.y]});return}
- for(let depth=1;depth<=data.depth;depth++){let chosen=best,score=-Infinity,complete=true;let moves=[best,...first.moves.filter(m=>m.x!==best.x||m.y!==best.y)].slice(0,data.width);try{for(const m of moves){b[m.y][m.x]=data.p;let v;try{v=won(m.x,m.y,data.p)?WIN+depth:-search(3-data.p,depth-1,-Infinity,-score,data.width)}finally{b[m.y][m.x]=0}if(v>score){score=v;chosen=m}}}catch{complete=false}if(complete){best=chosen;if(score>WIN-100)break}else break}
- self.postMessage({id:data.id,move:[best.x,best.y]});};
+ // Deterministic Zobrist keys; the table is private to this search worker.
+ let seed=0x9e3779b9;
+ const random=()=>{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return seed>>>0};
+ const keys=Array.from({length:SIZE},()=>[0,random(),random()]);
+ function won(i,p){const x=i%N,y=(i/N)|0;for(const[dx,dy]of dirs){let n=1;for(const s of[-1,1]){let xx=x+dx*s,yy=y+dy*s;while(inside(xx,yy)&&b[yy*N+xx]===p){n++;xx+=dx*s;yy+=dy*s}}if(n>=5)return true}return false}
+ function potential(i,p){
+  const x=i%N,y=(i/N)|0;let total=0,fours=0,threes=0,openFours=0;
+  for(const[dx,dy]of dirs){
+   let line='';for(let k=-5;k<=5;k++){const xx=x+k*dx,yy=y+k*dy;line+=k===0?'X':!inside(xx,yy)?'#':b[yy*N+xx]===p?'X':b[yy*N+xx]?'#':'.'}
+   let contiguous=1;for(const s of[-1,1]){let k=5+s;while(k>=0&&k<11&&line[k]==='X'){contiguous++;k+=s}}if(contiguous>=5)return WIN;
+   const winning=new Set();let windows=0;
+   for(let start=1;start<=5;start++){const window=line.slice(start,start+5);if(window.includes('#'))continue;const stones=window.split('X').length-1;if(stones===4)winning.add(start+window.indexOf('.'));else windows+=[0,2,20,170][stones]||0;}
+   if(winning.size>=2){openFours++;fours++;total+=2000000}
+   else if(winning.size===1){fours++;total+=130000}
+   else {
+    // Each direction counts once: overlapping windows are not separate threats.
+    let three=false;for(const pattern of['.XXX.','.XX.X.','.X.XX.']){let at=line.indexOf(pattern);while(at!==-1){if(at<5&&at+pattern.length>5){three=true;break}at=line.indexOf(pattern,at+1)}if(three)break}
+    if(three){threes++;total+=16000}else total+=windows;
+   }
+  }
+  if(fours>=2)total+=5000000;else if(fours&&threes)total+=2400000;else if(threes>=2)total+=500000;
+  return {score:total+14-Math.abs(x-7)-Math.abs(y-7),fours,threes,openFours};
+ }
+ function refresh(i){if(b[i])return;cache[1][i]=potential(i,1);cache[2][i]=potential(i,2)}
+ function play(i,p){
+  const changed=new Set([i]),x=i%N,y=(i/N)|0;
+  for(const[dx,dy]of dirs)for(let k=-5;k<=5;k++){const xx=x+dx*k,yy=y+dy*k;if(inside(xx,yy))changed.add(yy*N+xx)}
+  const saved=[];for(const j of changed)saved.push([j,cache[1][j],cache[2][j]]);
+  b[i]=p;hash=(hash^keys[i][p])>>>0;for(const j of changed)refresh(j);
+  return saved;
+ }
+ function unplay(i,p,saved){b[i]=0;hash=(hash^keys[i][p])>>>0;for(const[j,a,d]of saved){cache[1][j]=a;cache[2][j]=d}}
+ function score(v){return typeof v==='number'?v:v.score}
+ function rank(p){
+  const near=new Set();let occupied=false;
+  for(let i=0;i<SIZE;i++)if(b[i]){occupied=true;const x=i%N,y=(i/N)|0;for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const xx=x+dx,yy=y+dy;if(inside(xx,yy)&&!b[yy*N+xx])near.add(yy*N+xx)}}
+  if(!occupied)near.add(112);
+  const all=[],wins=[],blocks=[];for(const i of near){const a=cache[p][i],d=cache[3-p][i];const m={i,a:score(a),d:score(d),attack:a,defend:d};m.s=Math.max(m.a,m.d*.98)+Math.min(m.a,m.d)*.2;all.push(m);if(m.a>=WIN)wins.push(m);if(m.d>=WIN)blocks.push(m)}
+  all.sort((a,b)=>b.s-a.s||a.i-b.i);
+  return {all,moves:wins.length?wins:blocks.length?blocks:all,wins:wins.length,blocks:blocks.length};
+ }
+ function staticValue(p,r){let a=0,d=0,a2=0,d2=0;for(const m of r.all){if(m.a>a){a2=a;a=m.a}else a2=Math.max(a2,m.a);if(m.d>d){d2=d;d=m.d}else d2=Math.max(d2,m.d)}return a*1.08+a2*.12-d-d2*.12}
+ function search(p,depth,alpha,beta,ply,width,extension){
+  if((++nodes&15)===0&&performance.now()>deadline)throw 'timeout';
+  const r=rank(p);if(!r.moves.length)return 0;if(r.wins)return WIN-ply;if(r.blocks>1)return -WIN+ply+1;
+  if(depth<=0){if(extension>0&&(r.blocks||r.moves.some(m=>m.attack.fours))){r.moves=r.blocks?r.moves:r.moves.filter(m=>m.attack.fours);depth=1;extension--}else return staticValue(p,r)}
+  const key=hash+':'+p+':'+extension,old=tt.get(key),alphaStart=alpha,betaStart=beta;
+  if(old&&old.depth>=depth){if(old.flag===0)return old.value;if(old.flag===1)alpha=Math.max(alpha,old.value);else beta=Math.min(beta,old.value);if(alpha>=beta)return old.value}
+  if(old){const at=r.moves.findIndex(m=>m.i===old.move);if(at>0)r.moves.unshift(r.moves.splice(at,1)[0])}
+  let best=-Infinity,bestMove=r.moves[0].i;
+  // Forcing defenses remain in the tree even when they fall below the quiet beam.
+  const selected=r.moves.filter((m,i)=>i<width||m.a>=130000||m.d>=130000).slice(0,Math.max(width,24));
+  for(const m of selected){const saved=play(m.i,p);let v;try{v=won(m.i,p)?WIN-ply:-search(3-p,depth-1,-beta,-alpha,ply+1,Math.max(6,width-2),extension)}finally{unplay(m.i,p,saved)}if(v>best){best=v;bestMove=m.i}alpha=Math.max(alpha,v);if(alpha>=beta)break}
+  if(tt.size>60000)tt.clear();tt.set(key,{depth,value:best,move:bestMove,flag:best<=alphaStart?2:best>=betaStart?1:0});return best;
+ }
+ self.onmessage=({data})=>{
+  b=data.board.flat();rootPlayer=data.p;hash=0;for(let i=0;i<SIZE;i++)if(b[i])hash=(hash^keys[i][b[i]])>>>0;
+  cache=[null,Array(SIZE),Array(SIZE)];tt=new Map();nodes=0;deadline=performance.now()+data.budget;
+  for(let i=0;i<SIZE;i++)refresh(i);
+  const first=rank(rootPlayer);let best=first.moves[0],completedDepth=0;
+  const report=done=>self.postMessage({id:data.id,move:best?[best.i%N,(best.i/N)|0]:null,done,depth:completedDepth,nodes});
+  if(!best){report(true);return}report(false);
+  if(first.wins||first.blocks===1||b.every(v=>v===0)){report(true);return}
+  // Root candidates are reordered after each completed iteration.
+  let root=first.moves.filter((m,i)=>i<data.width||m.a>=130000||m.d>=130000).slice(0,Math.max(data.width,24));
+  for(let depth=1;depth<=data.depth;depth++){
+   let chosen=best,value=-Infinity,complete=true;const values=new Map();
+   try{for(const m of root){if(performance.now()>deadline)throw 'timeout';const saved=play(m.i,rootPlayer);let v;try{v=won(m.i,rootPlayer)?WIN:-search(3-rootPlayer,depth-1,-Infinity,-value,1,data.width,3)}finally{unplay(m.i,rootPlayer,saved)}values.set(m.i,v);if(v>value){value=v;chosen=m}}}catch(e){if(e!=='timeout')throw e;complete=false}
+   if(!complete)break;best=chosen;completedDepth=depth;report(false);root.sort((a,b)=>(values.get(b.i)??-Infinity)-(values.get(a.i)??-Infinity));if(value>=WIN-30)break;
+  }
+  report(true);
+ };
 }
+
 let bearWorker=null,aiTicket=0;
 function stopAI(){aiTicket++;if(bearWorker){bearWorker.terminate();bearWorker=null}clearTimeout(timer);timer=null}
-function queueAI(){if(gameMode!=='ai'||turn===human||ended)return;stopAI();thinking=true;hover=null;update();draw();const id=aiTicket;const p=turn;const config={hard:{depth:3,width:8,budget:450},expert:{depth:4,width:10,budget:900},master:{depth:5,width:12,budget:1500}}[level];
+function queueAI(){if(gameMode!=='ai'||turn===human||ended)return;stopAI();thinking=true;hover=null;update();draw();const id=aiTicket;const p=turn;let latestMove=null;const config={normal:{depth:3,width:10,budget:600},hard:{depth:5,width:14,budget:1400},expert:{depth:7,width:18,budget:2800},master:{depth:9,width:22,budget:5000}}[level];
  function finish(move){if(id!==aiTicket||gameMode!=='ai'||turn!==p||ended)return;if(bearWorker){bearWorker.terminate();bearWorker=null}clearTimeout(timer);timer=null;thinking=false;if(!move||!inside(...move)||board[move[1]][move[0]])move=pickAI();put(...move)}
- timer=setTimeout(()=>{if(id!==aiTicket)return;if(!config){finish(pickAI());return}try{const url=URL.createObjectURL(new Blob(['('+bearSearchWorker.toString()+')()'],{type:'text/javascript'}));bearWorker=new Worker(url);URL.revokeObjectURL(url);bearWorker.onmessage=({data})=>{if(data.id===id)finish(data.move)};bearWorker.onerror=()=>finish(pickAI());bearWorker.postMessage({id,board,p,...config});timer=setTimeout(()=>finish(pickAI()),config.budget+2500)}catch{finish(pickAI())}},level==='easy'?300:450)}
+ timer=setTimeout(()=>{if(id!==aiTicket)return;if(!config){finish(pickAI());return}try{const url=URL.createObjectURL(new Blob(['('+bearSearchWorker.toString()+')()'],{type:'text/javascript'}));bearWorker=new Worker(url);URL.revokeObjectURL(url);bearWorker.onmessage=({data})=>{if(data.id!==id)return;latestMove=data.move;if(data.done)finish(latestMove)};bearWorker.onerror=()=>finish(latestMove||pickAI());bearWorker.postMessage({id,board,p,...config});timer=setTimeout(()=>finish(latestMove||pickAI()),config.budget+2000)}catch{finish(pickAI())}},level==='easy'?300:450)}
 function save(){try{localStorage.setItem('cozy-gomoku-v1',JSON.stringify({history,mode:gameMode,human,level}))}catch{}}
 function fresh(){stopAI();clearTimeout(timer);timer=null;thinking=false;board=Array.from({length:N},()=>Array(N).fill(0));history=[];turn=1;ended=false;winning=[];hover=null;keyboard=false;focus=[7,7];$('bearStage').classList.remove('win-banner');gameMode=$('mode').value;human=Number($('side').value);level=$('level').value;update();draw();save();queueAI()}
 function point(e){let r=canvas.getBoundingClientRect(),xx=(e.clientX-r.left)*W/r.width,yy=(e.clientY-r.top)*W/r.height;let x=Math.round((xx-P)/G),y=Math.round((yy-P)/G);if(!inside(x,y)||Math.abs(xx-(P+x*G))>G*.49||Math.abs(yy-(P+y*G))>G*.49)return null;return[x,y]}
@@ -76,7 +140,7 @@ canvas.addEventListener('pointerup',e=>{const start=pressStart;pressStart=null;i
 canvas.addEventListener('pointercancel',()=>{pressStart=null;hover=null;draw()});canvas.addEventListener('pointerleave',()=>{pressStart=null;hover=null;draw()});canvas.addEventListener('keydown',e=>{let delta={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[e.key];if(delta){e.preventDefault();keyboard=true;focus=[Math.max(0,Math.min(14,focus[0]+delta[0])),Math.max(0,Math.min(14,focus[1]+delta[1]))];draw()}else if(e.key==='Enter'||e.key===' '){e.preventDefault();humanMove(...focus)}});
 $('restart').onclick=fresh;$('undo').onclick=()=>{if(ended)return;stopAI();clearTimeout(timer);timer=null;thinking=false;let at=gameMode==='local'?history.length-1:history.findLastIndex(h=>h.p===human);if(at<0)return;for(let h of history.splice(at))board[h.y][h.x]=0;turn=human;if(gameMode==='local')turn=history.length%2+1;hover=null;draw();update();save();announce('退回一步，重新想想吧。')};$('mode').onchange=$('side').onchange=()=>{if(history.length&&!confirm('切换会开始新的一局，继续吗？')){$('mode').value=gameMode;$('side').value=String(human);return}fresh()};$('level').onchange=()=>{const selected=$('level').value;if(history.length&&!confirm('更换难度会重新开局，继续吗？')){$('level').value=level;return}fresh()};$('sound').onclick=()=>{sound=!sound;$('sound').textContent='♪ 落子音效：'+(sound?'开':'关');$('sound').setAttribute('aria-pressed',String(sound));if(sound)note()};window.addEventListener('resize',resize);
 // Restore only valid move sequences saved in this browser.
-fresh();try{let saved=JSON.parse(localStorage.getItem('cozy-gomoku-session')||'null');if(saved&&Array.isArray(saved.history)&&['ai','local'].includes(saved.mode)&&[1,2].includes(saved.human)){ $('mode').value=saved.mode;$('side').value=String(saved.human);$('level').value=['easy','normal','hard','expert','master'].includes(saved.level)?saved.level:'normal';fresh();clearTimeout(timer);thinking=false;for(let h of saved.history){if(!Number.isInteger(h.x)||!Number.isInteger(h.y)||!inside(h.x,h.y)||board[h.y][h.x]||h.p!==turn||ended)break;put(h.x,h.y)}queueAI()}}catch{}let saveOriginal=save;save=function(){saveOriginal();try{localStorage.setItem('cozy-gomoku-session',JSON.stringify({history,mode:gameMode,human,level}))}catch{}};resize();
+fresh();try{let saved=JSON.parse(localStorage.getItem('cozy-gomoku-session')||'null');if(saved&&Array.isArray(saved.history)&&['ai','local'].includes(saved.mode)&&[1,2].includes(saved.human)){ $('mode').value=saved.mode;$('side').value=String(saved.human);$('level').value=['easy','normal','hard','expert','master'].includes(saved.level)?saved.level:'hard';fresh();clearTimeout(timer);thinking=false;for(let h of saved.history){if(!Number.isInteger(h.x)||!Number.isInteger(h.y)||!inside(h.x,h.y)||board[h.y][h.x]||h.p!==turn||ended)break;put(h.x,h.y)}queueAI()}}catch{}let saveOriginal=save;save=function(){saveOriginal();try{localStorage.setItem('cozy-gomoku-session',JSON.stringify({history,mode:gameMode,human,level}))}catch{}};resize();
 
 // Online state is authoritative on the room server; never infer a remote move.
 const ONLINE_ORIGIN=location.protocol==='https:'&&!['localhost','127.0.0.1'].includes(location.hostname)?location.origin:'https://test.earlier.top';
@@ -136,4 +200,5 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&roomSessi
 const invitation=new URLSearchParams(location.search).get('room');if(invitation){$('mode').value='online';baseFresh();$('roomInput').value=invitation.toUpperCase();roomError('点击「加入」，和朋友坐进同一个房间。')}else if(savedRoom()){ $('mode').value='online';baseFresh();const s=savedRoom();joinOnline(s.code)}update();
 
 </script></body></html>
+
 
